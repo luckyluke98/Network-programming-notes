@@ -45,4 +45,9 @@ struct pollfd {
 // - POLLIN : Alert me when data is ready to recv() on this socket.
 // - POLLOUT : Alert me when I can send() data to this socket without blocking.
 // - POLLHUP : Alert me when the remote closed the connection.
-
+// On success, poll() returns a nonnegative value which is the number
+// of elements in the pollfds whose revents fields have been set to a
+// nonzero value (indicating an event or an error).  A return value
+// of zero indicates that the system call timed out before any file
+// descriptors became ready.
+// On error, -1 is returned, and errno is set to indicate the error.

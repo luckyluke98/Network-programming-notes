@@ -83,3 +83,62 @@ inet_pton(AF_INET6, "2001:db8:63b3:1::3490", &(sa6.sin6_addr)); // IPv6
 // depending on whether you specify AF_INET or AF_INET6. (“pton” stands for 
 // “presentation to network”—you can call it “printable to network” if that’s 
 // easier to remember.
+
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netdb.h>
+
+int getaddrinfo(const char *restrict node,
+                const char *restrict service,
+                const struct addrinfo *restrict hints,
+                struct addrinfo **restrict res);
+
+void freeaddrinfo(struct addrinfo *res);
+
+const char *gai_strerror(int errcode);
+
+// domain: AF_INET, AF_INET6, ecc
+// type: SOCK_STREAM, SOCK_DGRAM, ecc
+
+#include <sys/socket.h>
+
+int socket(int domain, int type, int protocol);
+
+// On success, zero is returned.  On error, -1 is returned, and errno
+// is set to indicate the error.
+
+#include <sys/socket.h>
+
+int bind(int sockfd, const struct sockaddr *addr,
+        socklen_t addrlen);
+
+// On success, zero is returned.  On error, -1 is returned, and errno
+// is set to indicate the error.
+
+#include <sys/socket.h>
+
+int listen(int sockfd, int backlog);
+
+#include <sys/socket.h>
+
+int accept(int sockfd, struct sockaddr *_Nullable restrict addr,
+            socklen_t *_Nullable restrict addrlen);
+            
+// The argument sockfd is a socket that has been created with
+// socket(2), bound to a local address with bind(2), and is listening
+// for connections after a listen(2).
+// The argument addr is a pointer to a sockaddr structure.  This
+// structure is filled in with the address of the peer socket, as
+// known to the communications layer.  The exact format of the
+// address returned addr is determined by the socket's address family
+// (see socket(2) and the respective protocol man pages).  When addr
+// is NULL, nothing is filled in; in this case, addrlen is not used,
+// and should also be NULL.
+// The addrlen argument is a value-result argument: the caller must
+// initialize it to contain the size (in bytes) of the structure
+// pointed to by addr; on return it will contain the actual size of
+// the peer address.
+// On success, these system calls return a file descriptor for the
+// accepted socket (a nonnegative integer).  On error, -1 is
+// returned, errno is set to indicate the error, and addrlen is left
+// unchanged.
