@@ -121,12 +121,20 @@ int main() {
                             fds[fds_count].events = POLLIN;
                             fds[fds_count].revents = 0; 
                             fds_count++; 
+
+                            // Inviamo a tutti che si è unito qualcuno
                         } 
                     }
                 }
                 // Non è il listener
                 else {
-                    
+                    // Riceviamo i dati
+
+                    // Se riceviamo i dati correttamente
+                    // Inviamo a tutti i dati
+
+                    // Altrimenti il client si è scollegato
+                    // Notifichiamo a tutti
                 }  
 
             } 
