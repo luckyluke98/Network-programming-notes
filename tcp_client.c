@@ -42,7 +42,7 @@ int main() {
 
     for (p = srvinfo; p != NULL; p = p->ai_next) {
         
-        if (socket_fd = socket(p->ai_family, p->ai_socktype, p->ai_protocol) == -1) { 
+        if ((socket_fd = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == -1) { 
             perror("Error create socket file descriptor");
             continue;            
         } 

@@ -45,10 +45,10 @@ int main() {
 
     hints.ai_family = AF_INET;
     hints.ai_socktype = SOCK_STREAM;
-    hints.ai_flags = AI_PASSIVE;
+    //hints.ai_flags = AI_PASSIVE;
 
     // Cerchiamo di ottenere le info relative al nodo (nostra macchina)
-    if ((status = getaddrinfo(NULL, PORT, &hints, &srvinfo)) != 0) {
+    if ((status = getaddrinfo("localhost", PORT, &hints, &srvinfo)) != 0) {
         fprintf(stderr, "Errore getaddrinfo; %s\n", gai_strerror(status));
         exit(1);
     } 
@@ -146,16 +146,17 @@ int main() {
                 }
                 // Non è il listener
                 else {
-                    printf("Client");
+                    printf("Client\n");
                     // Riceviamo i dati
                     char msg[50]; 
                     int bytes = recv(fds[i].fd, msg, sizeof msg, 0);
+                    printf("%d\n",bytes);
 
-                    if (bytes <= -1) {
+                    if (bytes <= 0) {
                         printf("recv -1\n");
                         if (bytes == 0) {
                             // Connection closed
-                            printf("Utente si è disconesso");
+                            printf("Utente si è disconesso\n");
                         } else {
                             perror("recv");
                         }
@@ -167,6 +168,7 @@ int main() {
                         i--;
                     } 
                     else {
+                        printf("DENTRO\n");
                         msg[bytes] = '\0'; 
                         printf("%s\n", msg);
                         // Se riceviamo i dati correttamente
