@@ -30,6 +30,7 @@ int main() {
 
     hints.ai_family = AF_UNSPEC;     
     hints.ai_socktype = SOCK_STREAM;
+    //hints.ai_flags = AI_PASSIVE;
     
     if (status = getaddrinfo("localhost", PORT, &hints, &srvinfo) != 0) {
         fprintf(stderr, "getaddrinfo error: %s\n", gai_strerror(status));
@@ -62,8 +63,15 @@ int main() {
         exit(1);
     } 
 
+    printf("CONNESSIONE RIUSCITA\n");
+
     // recv() è bloccante.
 
+    if (send(socket_fd, "CIAO", 4, 0) == -1) {
+        perror("Errore send");
+    }
+
+    /** 
     if ((res_num_bytes = recv(socket_fd, res, 50, 0)) == -1) {
         perror("Error in recv");
         exit(1);
@@ -73,9 +81,9 @@ int main() {
     res[res_num_bytes] = '\0';
     
     printf("Data ricevuti: %s\n", res);
-
+*/
     close(socket_fd);
-
+    
     return 0;
 
 } 

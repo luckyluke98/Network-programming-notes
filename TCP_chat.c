@@ -14,6 +14,8 @@
 #include <sys/wait.h>
 #include <signal.h>
 
+#include <poll.h>
+
 #include <errno.h>
 
 #define PORT "3490"
@@ -51,16 +53,16 @@ int main() {
         exit(1);
     } 
     
-    for (p = srvinfo; p != NULL; p = p -> ai_next) {
+    for (p = srvinfo; p != NULL; p = p->ai_next) {
         
         // Adesso per le info che abbiamo ottenuto cerchiamo di ottenere un socket
-        if ((socket_fd = socket(p -> ai_family, p -> ai_socktype, p -> ai_protocol)) == -1) {
+        if ((socket_fd = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == -1) {
             perror("Errore socket");
             continue;
         }
 
         // Se il socket è stato creato con successo facciamo il bind
-        if ((status = bind(socket_fd, p -> ai_addr, p -> ai_addrlen)) == -1) {
+        if ((status = bind(socket_fd, p->ai_addr, p->ai_addrlen)) == -1) {
             perror("Errore bind");
             close(socket_fd);
             continue;
@@ -90,20 +92,23 @@ int main() {
 
     while (1) {
         int poll_count = poll(fds, fds_count, -1);
+        printf("%d\n", poll_count);
 
         if (poll_count == -1) {
             perror("Errore nella poll");
             continue;
         }
 
-        for (int i = 0; i < poll_count; i++) {
+        for (int i = 0; i < fds_count; i++) {
+            printf("Inizio\n");
 
             if (fds[i].revents & (POLLIN | POLLHUP) ) {
                 
                 // Se è il listener vuol dire che abbiamo una connessione
                 // in entrata
                 if (fds[i].fd == socket_fd) {
-
+                    printf("Listener\n");
+                    //exit(1);
                     // Se c'è posto nella chat
                     if (fds_count <= MAX_FDS - 1) {
                         int new_socket;
@@ -113,34 +118,72 @@ int main() {
                         addrlen = sizeof in_addr;
 
                         if ((new_socket = accept(socket_fd, &in_addr, &addrlen)) == -1) {
-                            perror("accept");
+                            perror("Errore accept");
                         }
-                        // Aggiungiamo alle connessioni attive
+                        // Otteniamo messaggio di join
                         else {
+                            
+                            char *join_msg = " si è unito!";
+                            
+                            // Aggiungiamo alle connessioni attive
                             fds[fds_count].fd = new_socket;
                             fds[fds_count].events = POLLIN;
                             fds[fds_count].revents = 0; 
                             fds_count++; 
 
                             // Inviamo a tutti che si è unito qualcuno
-                        } 
+                            for (int c = 0; c < fds_count; c++) {
+                                if (fds[c].fd != socket_fd) {
+                                    
+                                    if (send(fds[c].fd, join_msg, sizeof join_msg, 0) == -1) {
+                                        perror("Errore send");
+                                    }
+                                }
+                            }
+                            
+                        }  
                     }
                 }
                 // Non è il listener
                 else {
+                    printf("Client");
                     // Riceviamo i dati
+                    char msg[50]; 
+                    int bytes = recv(fds[i].fd, msg, sizeof msg, 0);
 
-                    // Se riceviamo i dati correttamente
-                    // Inviamo a tutti i dati
+                    if (bytes <= -1) {
+                        printf("recv -1\n");
+                        if (bytes == 0) {
+                            // Connection closed
+                            printf("Utente si è disconesso");
+                        } else {
+                            perror("recv");
+                        }
 
-                    // Altrimenti il client si è scollegato
-                    // Notifichiamo a tutti
+                        close(fds[i].fd);
+
+                        fds[i] = fds[fds_count-1];
+                        fds_count--;
+                        i--;
+                    } 
+                    else {
+                        msg[bytes] = '\0'; 
+                        printf("%s\n", msg);
+                        // Se riceviamo i dati correttamente
+                        // Inviamo a tutti i dati
+                        for (int c = 0; c < fds_count; c++) {
+                            if (fds[c].fd != socket_fd && fds[i].fd != fds[c].fd ) {
+                                
+                                if (send(fds[c].fd, msg, bytes, 0) == -1) {
+                                    perror("Errore send");
+                                }
+                            }
+                        }
+                    }   
                 }  
-
-            } 
-
+            }
         }
-    } 
+    }
 
     return 0;
 } 
