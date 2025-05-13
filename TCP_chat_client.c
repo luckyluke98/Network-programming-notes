@@ -90,7 +90,7 @@ void * listen_server(void *args) {
                 
             } 
             // Se è 0 il server ha chiuso il socket
-            printf("Il server ha chiuso la connessione\n");
+            printf("Il server ha chiuso la connessione o la chat potrebbe essere piena.\n");
             close(t_args->socket_fd);
             break;
         }
