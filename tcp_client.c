@@ -67,11 +67,11 @@ int main() {
 
     // recv() è bloccante.
 
-    if (send(socket_fd, "CIAO", 4, 0) == -1) {
+    if (send(socket_fd, "Luca", 4, 0) == -1) {
         perror("Errore send");
     }
 
-    /** 
+    
     if ((res_num_bytes = recv(socket_fd, res, 50, 0)) == -1) {
         perror("Error in recv");
         exit(1);
@@ -81,7 +81,7 @@ int main() {
     res[res_num_bytes] = '\0';
     
     printf("Data ricevuti: %s\n", res);
-*/
+
     close(socket_fd);
     
     return 0;

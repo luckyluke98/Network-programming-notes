@@ -22,26 +22,47 @@
 #define BACKLOG 10
 #define MAX_FDS 5
 
+struct client_info {
+    int has_nick;
+    char nick[50];
+    char ip[INET6_ADDRSTRLEN];
+};
+
+void * get_in_addr(struct sockaddr * ip) {
+    if (ip->sa_family == AF_INET) {
+        return &(((struct sockaddr_in *) ip)->sin_addr);
+    } 
+
+    return &(((struct sockaddr_in6 *) ip)->sin6_addr);
+} 
 
 int main() {
 
     struct addrinfo *srvinfo, hints;
     struct addrinfo *p; // Puntatore di supporto per scorrere srvinfo
     
-    int status;
+    int status; // Per memorizzare stati di ritorno
 
-    int socket_fd; // file descriptor del socket
-    socklen_t addrlen; // addrlen specifies the size, in bytes,
-                       // of the address structure pointed to by addr. 
+    int socket_fd; // file descriptor del socket listener
 
+    /* Variabili per gestire file descriptors e info sui client*/
     struct pollfd *fds;
     int fds_count = 0;
+    struct client_info *clients_info;
+
+    /* Variabili per gestinre nuova connessione */
+    char remote_ip[INET6_ADDRSTRLEN]; 
+    int new_socket;
+    struct sockaddr_storage in_addr;
+    socklen_t addrlen; // addrlen specifies the size, in bytes,
+                       // of the address structure pointed to by addr. 
 
     // Prepariamo hints per essere passato a getaddrinfo()
     memset(&hints, 0, sizeof hints);
 
     // Array di file descriptrs per più connessioni. Da cui faremo poll.
     fds = (struct pollfd *) malloc(sizeof (struct pollfd) * MAX_FDS);
+    clients_info = (struct client_info *) malloc(sizeof (struct client_info) * MAX_FDS);
 
     hints.ai_family = AF_INET;
     hints.ai_socktype = SOCK_STREAM;
@@ -92,7 +113,6 @@ int main() {
 
     while (1) {
         int poll_count = poll(fds, fds_count, -1);
-        printf("%d\n", poll_count);
 
         if (poll_count == -1) {
             perror("Errore nella poll");
@@ -100,84 +120,87 @@ int main() {
         }
 
         for (int i = 0; i < fds_count; i++) {
-            printf("Inizio\n");
-
             if (fds[i].revents & (POLLIN | POLLHUP) ) {
-                
-                // Se è il listener vuol dire che abbiamo una connessione
-                // in entrata
+                // Se è il listener vuol dire che abbiamo una connessione in entrata
                 if (fds[i].fd == socket_fd) {
-                    printf("Listener\n");
-                    //exit(1);
                     // Se c'è posto nella chat
                     if (fds_count <= MAX_FDS - 1) {
-                        int new_socket;
-                        struct sockaddr in_addr;
-                        socklen_t addrlen;
-
                         addrlen = sizeof in_addr;
 
-                        if ((new_socket = accept(socket_fd, &in_addr, &addrlen)) == -1) {
+                        if ((new_socket = accept(socket_fd, (struct sockaddr *) &in_addr, &addrlen)) == -1) {
                             perror("Errore accept");
                         }
-                        // Otteniamo messaggio di join
                         else {
-                            
-                            char *join_msg = " si è unito!";
-                            
+                            printf("[Server] Nuova connessione da %s\n", 
+                                inet_ntop(in_addr.ss_family,
+                                    get_in_addr((struct sockaddr*)&in_addr),
+                                    remote_ip, INET6_ADDRSTRLEN));
+                                
                             // Aggiungiamo alle connessioni attive
                             fds[fds_count].fd = new_socket;
                             fds[fds_count].events = POLLIN;
                             fds[fds_count].revents = 0; 
-                            fds_count++; 
-
-                            // Inviamo a tutti che si è unito qualcuno
-                            for (int c = 0; c < fds_count; c++) {
-                                if (fds[c].fd != socket_fd) {
-                                    
-                                    if (send(fds[c].fd, join_msg, sizeof join_msg, 0) == -1) {
-                                        perror("Errore send");
-                                    }
-                                }
-                            }
                             
+                            clients_info[fds_count].has_nick = 0;
+                            snprintf(clients_info[fds_count].ip, sizeof(clients_info[fds_count].ip), "%s", remote_ip);
+
+                            fds_count++;
                         }  
                     }
                 }
                 // Non è il listener
                 else {
-                    printf("Client\n");
                     // Riceviamo i dati
-                    char msg[50]; 
+                    char msg[50]; // Salviamo Messaggio qua
+                    char buf[50]; // buffer di supporto
                     int bytes = recv(fds[i].fd, msg, sizeof msg, 0);
-                    printf("%d\n",bytes);
 
                     if (bytes <= 0) {
-                        printf("recv -1\n");
                         if (bytes == 0) {
                             // Connection closed
-                            printf("Utente si è disconesso\n");
+                            printf("[Server] Utente \"%s\" si è disconesso!\n", clients_info[i].nick);
                         } else {
+                            // se non gestisci correttamente un recv() 
+                            // che ritorna -1 o 0, la poll continuerà a 
+                            // dirti che c'è qualcosa da leggere, va chiuso il socket anche da server
                             perror("recv");
                         }
 
                         close(fds[i].fd);
 
                         fds[i] = fds[fds_count-1];
+                        clients_info[i] = clients_info[fds_count-1];  
                         fds_count--;
                         i--;
                     } 
                     else {
-                        printf("DENTRO\n");
-                        msg[bytes] = '\0'; 
-                        printf("%s\n", msg);
-                        // Se riceviamo i dati correttamente
-                        // Inviamo a tutti i dati
-                        for (int c = 0; c < fds_count; c++) {
-                            if (fds[c].fd != socket_fd && fds[i].fd != fds[c].fd ) {
+                        msg[bytes] = '\0';
+                        if (!clients_info[i].has_nick) {
+                            snprintf(clients_info[i].nick, sizeof(clients_info[i].nick), "%s", msg);
+                            snprintf(buf, sizeof buf, "%s si è unito alla chat!\n", clients_info[i].nick); 
                                 
-                                if (send(fds[c].fd, msg, bytes, 0) == -1) {
-                                    perror("Errore send");
+                            printf("[Server] %s si è unito come \"%s\"!\n", 
+                                clients_info[i].ip, 
+                                clients_info[i].nick);
+                            
+                            for (int c = 0; c < fds_count; c++) {
+                                if (fds[c].fd != socket_fd && fds[i].fd != fds[c].fd ) {
+                                    
+                                    if (send(fds[c].fd, buf, sizeof buf, 0) == -1) {
+                                        perror("Errore send");
+                                    }
+                                }
+                            }
+
+                        } 
+                        else {
+                            printf("[%s] %s\n", clients_info[i].nick, msg);
+                            for (int c = 0; c < fds_count; c++) {
+                                if (fds[c].fd != socket_fd && fds[i].fd != fds[c].fd ) {
+                                    
+                                    if (send(fds[c].fd, msg, bytes, 0) == -1) {
+                                        perror("Errore send");
+                                    }
                                 }
                             }
                         }
