@@ -158,7 +158,18 @@ int main() {
                     if (bytes <= 0) {
                         if (bytes == 0) {
                             // Connection closed
+                            snprintf(buf, sizeof buf, "*** %s ha lasciato la chat! ***", clients_info[i].nick); 
+                              
                             printf("[Server] Utente \"%s\" si è disconesso!\n", clients_info[i].nick);
+                            
+                            for (int c = 0; c < fds_count; c++) {
+                                if (fds[c].fd != socket_fd) {
+                                    
+                                    if (send(fds[c].fd, buf, sizeof buf, 0) == -1) {
+                                        perror("Errore send");
+                                    }
+                                }
+                            }
                         } else {
                             // se non gestisci correttamente un recv() 
                             // che ritorna -1 o 0, la poll continuerà a 
@@ -176,15 +187,16 @@ int main() {
                     else {
                         msg[bytes] = '\0';
                         if (!clients_info[i].has_nick) {
+                            clients_info[i].has_nick = 1; 
                             snprintf(clients_info[i].nick, sizeof(clients_info[i].nick), "%s", msg);
-                            snprintf(buf, sizeof buf, "%s si è unito alla chat!\n", clients_info[i].nick); 
+                            snprintf(buf, sizeof buf, "*** %s si è unito alla chat! ***", clients_info[i].nick); 
                                 
                             printf("[Server] %s si è unito come \"%s\"!\n", 
                                 clients_info[i].ip, 
                                 clients_info[i].nick);
                             
                             for (int c = 0; c < fds_count; c++) {
-                                if (fds[c].fd != socket_fd && fds[i].fd != fds[c].fd ) {
+                                if (fds[c].fd != socket_fd) {
                                     
                                     if (send(fds[c].fd, buf, sizeof buf, 0) == -1) {
                                         perror("Errore send");
@@ -194,11 +206,13 @@ int main() {
 
                         } 
                         else {
+                            snprintf(buf, sizeof buf, "[%s] %s", clients_info[i].nick, msg); 
+                              
                             printf("[%s] %s\n", clients_info[i].nick, msg);
                             for (int c = 0; c < fds_count; c++) {
-                                if (fds[c].fd != socket_fd && fds[i].fd != fds[c].fd ) {
+                                if (fds[c].fd != socket_fd) {
                                     
-                                    if (send(fds[c].fd, msg, bytes, 0) == -1) {
+                                    if (send(fds[c].fd, buf, strlen(buf), 0) == -1) {
                                         perror("Errore send");
                                     }
                                 }
