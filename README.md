@@ -40,9 +40,10 @@ Server Logs:
 
 ![image](https://github.com/user-attachments/assets/a11a715d-400e-4b86-9f24-0a65e644080c)
 
-Mike perspective:
+Robert perspective:
 
-![image](https://github.com/user-attachments/assets/4e9fc32d-b10a-40f9-ba50-d4d86411b925)
+![image](https://github.com/user-attachments/assets/e09ec0de-bc93-441b-8d8b-eb9b17d84f0b)
 
-Digitando ed inviando `/quit`, li lascierà la chat.
+
+Digitando ed inviando `/quit`, si lascierà la chat.
 
