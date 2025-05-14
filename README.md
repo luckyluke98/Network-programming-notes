@@ -1,9 +1,10 @@
 # Network Programming Notes
 
-Per puro interesse personale ho voluto approfondire la programmazione di rete in C. Mi ha sempre affascito il controllo a basso livello che può darti C, quindi ho voulto approfondirlo studiando un argomento visto solo in superfice.
-Per studiare ho seguito le fantastiche guide di Beej ([questa in particolare](https://beej.us/guide/bgnet/)). Le ho trovate complete per qualcuno che si sta approcciando all'argomento, inoltre lo stile con cui scrive ti tiene appiccicato al monitor (sembra di leggere un romanzo :-D).
-
-Ho voluto realizzare come semplice progetto una chat multiutente, andando ad utilizzare tutto il corredo di funzioni che permetto di accedere alle funzioanalità di rete in una macchina Unix.
+Per interesse personale ho voluto approfondire la programmazione di rete in C. Mi ha sempre affascito il controllo a basso livello che può darti C, quindi ho voulto approfondirlo studiando un argomento visto solo in superficie.
+Per studiare ho seguito le fantastiche guide di Beej ([questa in particolare](https://beej.us/guide/bgnet/)).
+Come piccolo progetto ho voluto realizzare una semplice chat multi-utente. Il server fa un bind di un porta sul socket e ascolta per connessioni in arrivo. Il client apre un socket e si connette al server sulla porta.
+Il server per ogni connessione accettata gestisce i file descriptor dei socket attraverso un array di `struct pollfd`.
+Trovate tutto nel codice.
 
 # Progetto TCP Chat
 
@@ -38,7 +39,8 @@ Eseguire clinets:
 
 Server Logs:
 
-![image](https://github.com/user-attachments/assets/a11a715d-400e-4b86-9f24-0a65e644080c)
+![image](https://github.com/user-attachments/assets/3a9e9c8a-2e47-4e74-9449-115c77391ffb)
+
 
 Robert perspective:
 
