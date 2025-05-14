@@ -1,6 +1,6 @@
 # Network Programming Notes
 
-Per interesse personale ho voluto approfondire la programmazione di rete in C. Mi ha sempre affascito il controllo a basso livello che può darti C, quindi ho voulto approfondirlo studiando un argomento visto solo in superficie.
+Per interesse personale ho voluto approfondire la programmazione di rete in C. Mi ha sempre affascinato il controllo a basso livello che può darti C, quindi ho voulto approfondirlo studiando un argomento visto solo in superficie.
 Per studiare ho seguito le fantastiche guide di Beej ([questa in particolare](https://beej.us/guide/bgnet/)).
 Come piccolo progetto ho voluto realizzare una semplice chat multi-utente. Il server fa un bind di un porta sul socket e ascolta per connessioni in arrivo. Il client apre un socket e si connette al server sulla porta.
 Il server per ogni connessione accettata gestisce i file descriptor dei socket attraverso un array di `struct pollfd`.
