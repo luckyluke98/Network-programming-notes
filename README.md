@@ -73,7 +73,7 @@ Example:
 - Allows the user to write and send messages.
 - Typing `/quit` closes the connection and exits the client.
 
-## 🔧 TODO / Future Improvements
+## TODO / Future Improvements
 
 - [ ] Server currently only accepts connections from `localhost`. Modify to allow external connections.
 - [ ] **Basic encryption support (e.g., TLS or SSL)**
