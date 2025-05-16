@@ -10,6 +10,10 @@ For each accepted connection, the server manages the socket file descriptors usi
 
 You’ll find everything in the source code.
 
+> **Disclaimer**  
+> Comments and notes in the code are written in a mix of Italian and English.  
+> This is intentional and part of the personal learning workflow — they won’t be translated.
+
 # TCP Chat Project
 
 This is a simple client-server application written in C, designed to simulate a multi-user chat over TCP sockets. It’s useful during penetration testing or for practicing low-level networking concepts.
