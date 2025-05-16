@@ -1,51 +1,92 @@
 # Network Programming Notes
 
-Per interesse personale ho voluto approfondire la programmazione di rete in C. Mi ha sempre affascinato il controllo a basso livello che può darti C, quindi ho voulto approfondirlo studiando un argomento visto solo in superficie.
-Per studiare ho seguito le fantastiche guide di Beej ([questa in particolare](https://beej.us/guide/bgnet/)).
-Come piccolo progetto ho voluto realizzare una semplice chat multi-utente. Il server fa un bind di un porta sul socket e ascolta per connessioni in arrivo. Il client apre un socket e si connette al server sulla porta.
-Il server per ogni connessione accettata gestisce i file descriptor dei socket attraverso un array di `struct pollfd`.
-Trovate tutto nel codice.
+Out of personal interest, I wanted to deepen my understanding of network programming in C. I've always been fascinated by the low-level control C offers, so I decided to explore a topic I had previously only touched on superficially.
 
-# Progetto TCP Chat
+To study, I followed the fantastic Beej’s guides ([this one in particular](https://beej.us/guide/bgnet/)).
 
-Compilare il server:
+As a small project, I created a simple multi-user chat. The server binds a socket to a port and listens for incoming connections. The client opens a socket and connects to the server on that port.
+
+For each accepted connection, the server manages the socket file descriptors using an array of `struct pollfd`.
+
+You’ll find everything in the source code.
+
+# TCP Chat Project
+
+This is a simple client-server application written in C, designed to simulate a multi-user chat over TCP sockets. It’s useful during penetration testing or for practicing low-level networking concepts.
+
+## Files
+
+- `TCP_chat.c` – Implements the TCP multi-client server using `poll()` for concurrent management.
+- `TCP_chat_client.c` – Implements an interactive terminal client using the `ncurses` library.
+
+## Compile the files
+
+You need `gcc`, and the `ncurses` and `pthread` libraries installed.
+
 ```bash
-gcc TCP_chat.c -o TCP_chat.out
+gcc -o TCP_chat TCP_chat.c
+gcc -o TCP_chat_client TCP_chat_client.c -lncurses -lpthread
 ```
 
-Compilare il client:
+## Execution
+
+### Start the server
+
 ```bash
-gcc TCP_chat_client.c -o TCP_chat_client.out -lncurses
+./TCP_chat
 ```
-Eseguire Server:
+
+### Start one or more clients (in separate terminals)
+
 ```bash
-./TCP_chat.out
+./TCP_chat_client <nickname>
 ```
 
-Eseguire clinets:
+Example:
+
 ```bash
-# Tab 1
-./TCP_chat_client.out Luca
-
-# Tab 2
-./TCP_chat_client.out John
-
-# Tab 3
-./TCP_chat_client.out Mike
-
-# Tab 4
-./TCP_chat_client.out Robert
+./TCP_chat_client Alice
+./TCP_chat_client Bob
 ```
+
+## How it works
+
+### Server (`TCP_chat.c`)
+
+- Listens on port `3490` on `localhost`.
+- Supports up to `MAX_FDS` simultaneous connections (default: 5).
+- Uses `poll()` to handle multiple clients without threading.
+- Each client sends their nickname as the first message.
+- Messages are forwarded to all connected clients.
+- When a client disconnects, others are notified.
+
+### Client (`TCP_chat_client.c`)
+
+- Requires a nickname as a command-line argument.
+- Connects to the server and sends the nickname as the first message.
+- Uses `ncurses` for the GUI.
+- Creates a background thread to listen for messages from the server.
+- Allows the user to write and send messages.
+- Typing `/quit` closes the connection and exits the client.
+
+## 🔧 TODO / Future Improvements
+
+- [ ] Server currently only accepts connections from `localhost`. Modify to allow external connections.
+- [ ] **Basic encryption support (e.g., TLS or SSL)**
+- [ ] When the connection limit is reached, new clients are immediately disconnected.
+- [ ] **Unique nicknames**, with rejection or notification in case of duplicates.
+- [ ] Allow more connections by reallocating the file descriptor array.
+
+## Example Images
 
 Server Logs:
 
 ![image](https://github.com/user-attachments/assets/3a9e9c8a-2e47-4e74-9449-115c77391ffb)
 
-
-Robert perspective:
+User perspective:
 
 ![image](https://github.com/user-attachments/assets/e09ec0de-bc93-441b-8d8b-eb9b17d84f0b)
 
+---
 
-Digitando ed inviando `/quit`, si lascierà la chat.
-
+Developed as a personal project for testing and educational purposes.
